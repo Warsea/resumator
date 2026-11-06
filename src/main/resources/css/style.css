@@ -1,0 +1,109 @@
+.root {
+    -fx-font-family: "Segoe UI", "Inter", "Helvetica", sans-serif;
+    -fx-font-size: 14px;
+    -bg-color: #F7F7F5;
+    -text-primary: #171717;
+    -text-secondary: #666666;
+    -accent-primary: #4F46E5;
+    -accent-light: #EEF2FF;
+    -success: #15803D;
+    -warning: #B45309;
+    -danger: #B91C1C;
+    -panel-bg: #FFFFFF;
+    -border-color: #E5E7EB;
+}
+
+.app-background {
+    -fx-background-color: -bg-color;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    -fx-background-color: -panel-bg;
+    -fx-border-color: transparent -border-color transparent transparent;
+    -fx-border-width: 1px;
+}
+
+.sidebar-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+    -fx-padding: 0 0 20 0;
+}
+
+.sidebar-section-title {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+    -fx-padding: 15 0 5 0;
+    -fx-font-weight: bold;
+}
+
+/* Buttons */
+.btn {
+    -fx-background-radius: 6px;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.btn-primary {
+    -fx-background-color: -accent-primary;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+.btn-primary:hover {
+    -fx-background-color: derive(-accent-primary, -10%);
+}
+.btn-primary .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.btn-nav {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-secondary;
+    -fx-padding: 10px 12px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-font-weight: normal;
+}
+.btn-nav:hover {
+    -fx-background-color: -bg-color;
+    -fx-text-fill: -text-primary;
+}
+.btn-nav .ikonli-font-icon {
+    -fx-icon-color: -text-secondary;
+}
+.btn-nav:hover .ikonli-font-icon {
+    -fx-icon-color: -text-primary;
+}
+
+/* Lists */
+.sidebar-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.sidebar-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-secondary;
+    -fx-padding: 8px 12px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+.sidebar-list .list-cell:hover {
+    -fx-background-color: -bg-color;
+}
+.sidebar-list .list-cell:selected {
+    -fx-background-color: -accent-light;
+    -fx-text-fill: -accent-primary;
+    -fx-font-weight: bold;
+}
+
+/* Main Content */
+.main-content {
+    -fx-background-color: -bg-color;
+}
+
+.placeholder-text {
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 16px;
+}

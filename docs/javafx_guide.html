@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Learning JavaFX through Resumetor</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1c1c24; }
+  h1 { font-size: 26pt; margin: 0 0 4px; color: #3730a3; }
+  h2 { font-size: 16pt; color: #3730a3; border-bottom: 2px solid #c7d2fe; padding-bottom: 4px; margin-top: 28px; page-break-after: avoid; }
+  h3 { font-size: 12pt; color: #1e1b4b; margin: 18px 0 4px; page-break-after: avoid; }
+  p { margin: 6px 0; }
+  code { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 9pt; background: #f1f1f8; padding: 1px 4px; border-radius: 3px; }
+  pre { background: #1e1e2e; color: #e6e6f0; padding: 10px 12px; border-radius: 6px; font-size: 8.4pt; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; page-break-inside: avoid; }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 9.5pt; page-break-inside: auto; }
+  th { background: #4f46e5; color: #fff; text-align: left; padding: 5px 8px; }
+  td { border: 1px solid #ddd; padding: 5px 8px; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  tr:nth-child(even) td { background: #f7f7fc; }
+  .sub { color: #666; font-size: 12pt; margin-bottom: 18px; }
+  .tip { background: #eef2ff; border-left: 4px solid #4f46e5; padding: 8px 12px; margin: 10px 0; border-radius: 0 4px 4px 0; page-break-inside: avoid; }
+  .warn { background: #fff7ed; border-left: 4px solid #ea580c; padding: 8px 12px; margin: 10px 0; border-radius: 0 4px 4px 0; page-break-inside: avoid; }
+  .cover { text-align: center; padding-top: 70mm; page-break-after: always; }
+  .cover h1 { font-size: 34pt; }
+  .toc li { margin: 2px 0; }
+  .pb { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Learning JavaFX<br>through Resumetor</h1>
+  <p class="sub">A guide for TypeScript / Django developers who just learned Java syntax</p>
+  <p>Project: Resumetor &mdash; JavaFX 21 + SQLite + OpenRouter<br>Java 21 &middot; Maven</p>
+</div>
+
+<h2 style="margin-top:0">Contents</h2>
+<ol class="toc">
+  <li>The mental model: JavaFX compared to what you already know</li>
+  <li>Project layout: what every folder contains</li>
+  <li>Build system: Maven, <code>pom.xml</code> and <code>module-info.java</code></li>
+  <li>How the app starts (boot sequence)</li>
+  <li>The scene graph and layout containers</li>
+  <li>Layout classes as "components" and navigation</li>
+  <li>Styling with JavaFX CSS</li>
+  <li>Events, dialogs and forms</li>
+  <li>Threading: the JavaFX Application Thread</li>
+  <li>The data layer: models, DAOs, SQLite and JDBC</li>
+  <li>The AI layer: OpenRouter, prompts and PII protection</li>
+  <li>Documents: formatter, PDF/DOCX export and in-app preview</li>
+  <li>End-to-end walkthrough: clicking "Analyze &amp; Generate"</li>
+  <li>File-by-file reference</li>
+  <li>Java gotchas for TypeScript developers</li>
+  <li>Known rough edges and exercises</li>
+</ol>
+
+<h2 class="pb">1. The mental model</h2>
+<p>JavaFX is a <b>retained-mode, object-oriented desktop UI toolkit</b>. You build a tree of Java objects (<i>nodes</i>), hand the tree to the framework, and it draws it and dispatches events. Unlike React, there is <b>no virtual DOM and no re-render</b>: you hold references to node objects and mutate them directly (like <code>document.getElementById(...).textContent = ...</code>, or like Tkinter's <code>label.config(text=...)</code>).</p>
+
+<table>
+<tr><th>JavaFX</th><th>Web / Next.js</th><th>Tkinter</th><th>Django / Nest</th></tr>
+<tr><td><code>Application</code> subclass</td><td><code>main.ts</code> / <code>bootstrap()</code></td><td><code>root = Tk(); root.mainloop()</code></td><td><code>manage.py</code> / <code>NestFactory.create</code></td></tr>
+<tr><td><code>Stage</code></td><td>Browser window</td><td><code>Tk()</code> root window</td><td>&ndash;</td></tr>
+<tr><td><code>Scene</code></td><td><code>document</code></td><td>root frame</td><td>&ndash;</td></tr>
+<tr><td><code>Node</code> (Button, Label, VBox&hellip;)</td><td>DOM element</td><td>Widget</td><td>&ndash;</td></tr>
+<tr><td>Layout containers (<code>VBox</code>, <code>HBox</code>, <code>GridPane</code>)</td><td>flexbox / grid</td><td><code>pack()</code> / <code>grid()</code></td><td>&ndash;</td></tr>
+<tr><td>CSS file (<code>-fx-</code> properties)</td><td>CSS</td><td>ttk styles</td><td>&ndash;</td></tr>
+<tr><td><code>button.setOnAction(e -&gt; ...)</code></td><td><code>addEventListener("click")</code></td><td><code>command=callback</code></td><td>&ndash;</td></tr>
+<tr><td><code>Platform.runLater</code></td><td>(single-threaded already)</td><td><code>root.after(0, fn)</code></td><td>&ndash;</td></tr>
+<tr><td><code>CompletableFuture</code></td><td><code>Promise</code></td><td><code>threading</code> + queue</td><td><code>async/await</code></td></tr>
+<tr><td>DAO class</td><td>&ndash;</td><td>&ndash;</td><td>Repository (Nest) / Manager (Django ORM)</td></tr>
+<tr><td>Model (POJO)</td><td>interface / DTO</td><td>&ndash;</td><td>Entity / Model</td></tr>
+<tr><td><code>pom.xml</code></td><td><code>package.json</code></td><td><code>requirements.txt</code></td><td>same</td></tr>
+</table>
+
+<div class="tip"><b>Closest analogy:</b> JavaFX feels like Tkinter with a much better layout system and real CSS. There is <i>no</i> state-driven re-rendering. If data changes, <b>you</b> rebuild or update the relevant nodes. In Resumetor the profile page simply calls <code>loadData()</code>, which clears the container and rebuilds every card from the database.</div>
+
+<h2>2. Project layout</h2>
+<pre><code>resumetor/
+├── pom.xml                      # Dependencies + build config (package.json)
+├── .env                         # OPENROUTER_API_KEY, AI_MODEL (optional)
+├── data/resumetor.db            # SQLite file, created at first run
+├── docs/                        # This guide
+└── src/main/
+    ├── java/
+    │   ├── module-info.java     # Java module declaration (what we require/export)
+    │   └── app/resumetor/
+    │       ├── App.java                 # Entry point (Application subclass)
+    │       ├── SystemInfo.java          # Boilerplate: prints Java/JavaFX versions
+    │       ├── controller/              # UI screens + navigation  (the "view" layer)
+    │       ├── model/                   # Plain data classes       (entities)
+    │       ├── repository/              # SQLite access            (DAOs)
+    │       ├── service/                 # Business logic: AiService
+    │       ├── ai/                      # HTTP client for OpenRouter
+    │       ├── security/                # PiiSanitizer: strips/restores personal data
+    │       ├── export/                  # DocumentFormatter, PdfExporter, DocxExporter
+    │       ├── importexport/            # VaultManager (export/import profile JSON)
+    │       ├── config/                  # Config: reads .env / env vars
+    │       └── util/                    # JsonText: tolerant JSON parsing helpers
+    └── resources/
+        ├── css/style.css        # Whole app theme
+        └── db/schema.sql        # CREATE TABLE statements, run at startup
+</code></pre>
+
+<h3>Package-by-package</h3>
+<table>
+<tr><th>Folder</th><th>Role</th><th>Express / Nest / Django equivalent</th></tr>
+<tr><td><code>controller/</code></td><td>Every screen is a class extending a JavaFX layout node. Despite the name, these are views <i>and</i> controllers (UI built in code, no FXML).</td><td>React components + page handlers</td></tr>
+<tr><td><code>model/</code></td><td>Data holders with private fields and getters/setters.</td><td>TypeORM entities / Django models / DTOs</td></tr>
+<tr><td><code>repository/</code></td><td>Raw SQL via JDBC. One class per aggregate.</td><td>Nest repositories / Django ORM</td></tr>
+<tr><td><code>service/</code></td><td>Orchestrates DAOs + AI calls, builds prompts.</td><td>Nest <code>@Injectable()</code> services</td></tr>
+<tr><td><code>ai/</code></td><td>Low-level HTTP to the LLM.</td><td><code>axios</code> / <code>requests</code> wrapper</td></tr>
+<tr><td><code>security/</code></td><td>Replace real name/email/phone with <code>[NAME]</code> tokens before the AI sees them, and put them back afterwards.</td><td>middleware / interceptor</td></tr>
+<tr><td><code>export/</code></td><td>Turn LLM output into a document and write PDF/DOCX.</td><td>a PDF-generation service</td></tr>
+<tr><td><code>config/</code></td><td>Env var access with <code>.env</code> support.</td><td><code>@nestjs/config</code> / <code>django-environ</code></td></tr>
+</table>
+<p>There is no dependency-injection container (no Spring). Classes simply do <code>new CareerDao()</code> where needed. Simple, but it means you wire things by hand.</p>
+
+<h2 class="pb">3. Build system: Maven and the module system</h2>
+<h3>3.1 <code>pom.xml</code> &mdash; your <code>package.json</code></h3>
+<ul>
+<li><code>&lt;dependencies&gt;</code> &rarr; <code>dependencies</code>. Maven downloads jars into <code>~/.m2</code>. Key ones here: <code>javafx-controls</code>, <code>ikonli-*</code> (icon fonts), <code>sqlite-jdbc</code>, <code>jackson-databind</code> (JSON), <code>poi-ooxml</code> (DOCX), <code>pdfbox</code> (PDF), <code>dotenv-java</code>.</li>
+<li><code>maven-compiler-plugin</code> with <code>&lt;release&gt;21&lt;/release&gt;</code> sets the Java version.</li>
+<li><code>javafx-maven-plugin</code> with <code>&lt;mainClass&gt;app.resumetor.App&lt;/mainClass&gt;</code> makes <code>mvn javafx:run</code> work (like an <code>npm run dev</code> script). It handles the JavaFX module path for you.</li>
+</ul>
+<table>
+<tr><th>Command</th><th>npm analogy</th></tr>
+<tr><td><code>mvn clean compile</code></td><td><code>tsc</code> (type-check/compile)</td></tr>
+<tr><td><code>mvn javafx:run</code></td><td><code>npm run dev</code></td></tr>
+<tr><td><code>mvn clean</code></td><td><code>rm -rf dist</code></td></tr>
+</table>
+<p>Maven's standard layout is mandatory: Java in <code>src/main/java</code>, non-code files in <code>src/main/resources</code>. Resources are loaded off the classpath, e.g. <code>getClass().getResourceAsStream("/db/schema.sql")</code>.</p>
+
+<h3>3.2 <code>module-info.java</code></h3>
+<pre><code>module app.resumetor {
+    requires javafx.controls;      // UI widgets
+    requires java.sql;             // JDBC
+    requires java.desktop;         // BufferedImage (PDF preview)
+    requires com.fasterxml.jackson.databind;
+    requires org.apache.pdfbox;
+    ...
+    exports app.resumetor;
+}</code></pre>
+<p>Java 9+ modules are an extra visibility layer: your code can only use a library if you <code>requires</code> it. Think of it as an explicit allow-list of imports at the package level. If you add a new library and get <i>"package X is not visible"</i>, you almost certainly forgot a <code>requires</code> line here. (This is what bit us when the PDF preview needed <code>java.desktop</code>.)</p>
+
+<h2>4. How the app starts</h2>
+<pre><code>public class App extends Application {
+    public void init()            { DatabaseManager.getInstance().getConnection(); }  // background thread
+    public void start(Stage stage) {                                                   // JavaFX thread
+        SceneManager.setPrimaryStage(stage);
+        Profile profile = new ProfileDao().getProfile();
+        if (profile == null) SceneManager.showOnboarding();
+        else                 SceneManager.showMainApp();
+        stage.show();
+    }
+    public static void main(String[] a) { launch(a); }
+}</code></pre>
+
+<p><b>Lifecycle:</b> <code>main()</code> &rarr; <code>launch()</code> boots the toolkit and creates the <b>JavaFX Application Thread</b> &rarr; <code>init()</code> (setup, no UI yet) &rarr; <code>start(Stage)</code> (build UI; you are handed the primary window) &rarr; the event loop runs until the window closes &rarr; <code>stop()</code>.</p>
+
+<p><b>Boot sequence in Resumetor:</b></p>
+<pre><code>App.init()
+  └─ DatabaseManager.getInstance()
+        ├─ creates ./data/ folder
+        ├─ opens jdbc:sqlite:data/resumetor.db
+        └─ runs every statement in /db/schema.sql  (CREATE TABLE IF NOT EXISTS ...)
+App.start(stage)
+  └─ ProfileDao.getProfile() == null ?
+        yes → SceneManager.showOnboarding()  → OnboardingLayout   (first run)
+        no  → SceneManager.showMainApp()     → MainLayout         (normal run)
+</code></pre>
+<p><code>SceneManager</code> is a tiny static "router for whole screens": it creates a <code>Scene</code> around a root node, attaches <code>style.css</code>, and swaps it onto the stage. Think of it as switching between <code>/onboarding</code> and <code>/app</code>.</p>
+
+<p><b>Schema migrations:</b> there is no migration tool. Because the schema uses <code>CREATE TABLE IF NOT EXISTS</code>, new tables (like <code>profile_link</code>) appear automatically on next launch, but <i>changing columns</i> of an existing table would require deleting <code>data/resumetor.db</code> or writing <code>ALTER TABLE</code> yourself.</p>
+
+<h2 class="pb">5. The scene graph and layout containers</h2>
+<p>A <code>Stage</code> holds one <code>Scene</code>; the Scene holds one root <code>Node</code>; containers hold child nodes. The whole UI is this tree:</p>
+<pre><code>Stage
+└─ Scene (1024x768, style.css)
+   └─ MainLayout (BorderPane)                 &larr; root
+      ├─ LEFT   : sidebar (VBox)
+      │            ├─ title Label
+      │            ├─ "New Application" Button
+      │            ├─ "Applications" Label
+      │            ├─ ScrollPane → VBox (applicationsList: one HBox per saved app)
+      │            └─ bottomNav VBox (Profile, Settings buttons)
+      └─ CENTER : mainContent (StackPane)    &larr; swapped by setMainContent(node)
+                   └─ NewApplicationLayout | GeneratedApplicationLayout |
+                      ProfileDashboardLayout | SettingsLayout</code></pre>
+
+<h3>Containers used in this project</h3>
+<table>
+<tr><th>Class</th><th>Behaviour</th><th>CSS analogue</th><th>Used in</th></tr>
+<tr><td><code>VBox(spacing)</code></td><td>children stacked vertically</td><td><code>display:flex; flex-direction:column; gap</code></td><td>every page, cards</td></tr>
+<tr><td><code>HBox(spacing)</code></td><td>children in a row</td><td><code>display:flex; gap</code></td><td>toolbars, list rows</td></tr>
+<tr><td><code>BorderPane</code></td><td>top/left/center/right/bottom regions</td><td>grid with named areas</td><td><code>MainLayout</code>, <code>GeneratedApplicationLayout</code></td></tr>
+<tr><td><code>GridPane</code></td><td>rows &amp; columns</td><td><code>display:grid</code></td><td>forms &amp; dialogs</td></tr>
+<tr><td><code>StackPane</code></td><td>children overlap (layers)</td><td><code>position:absolute</code> stack</td><td>content swap area</td></tr>
+<tr><td><code>ScrollPane</code></td><td>scrollable viewport</td><td><code>overflow:auto</code></td><td>pages, preview</td></tr>
+<tr><td><code>TabPane</code>/<code>Tab</code></td><td>tabs</td><td>tab component</td><td>Resume / Cover / Email / Fit</td></tr>
+</table>
+
+<h3>Sizing and growth</h3>
+<pre><code>HBox.setHgrow(spacer, Priority.ALWAYS);   // like  flex: 1  /  margin-left:auto
+VBox.setVgrow(area,  Priority.ALWAYS);    // fill remaining vertical space
+box.setPadding(new Insets(20));           // padding
+box.setAlignment(Pos.CENTER_LEFT);        // align-items / justify-content
+new VBox(10, a, b, c);                    // gap:10px with 3 children</code></pre>
+<p>The "spacer" trick used all over the code (an empty <code>Region</code> with <code>Priority.ALWAYS</code>) pushes the Edit/Delete buttons to the right edge of a row.</p>
+
+<h3>Building UI in code (no FXML)</h3>
+<p>JavaFX supports XML (<code>.fxml</code>) layouts, but this project builds everything in Java. It reads like JSX without the tags:</p>
+<pre><code>Label title = new Label("My Career Profile");
+title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold;");
+container.getChildren().add(title);          // append to the parent</code></pre>
+<p><code>getChildren()</code> is an <b>observable list</b>: adding/removing from it updates the screen immediately. <code>getChildren().setAll(x)</code> replaces everything, which is how the page content is swapped.</p>
+
+<h2 class="pb">6. Layout classes as "components"; navigation</h2>
+<p>There is no component API like React. The convention here is: <b>subclass a container and build children in the constructor</b>.</p>
+<pre><code>public class SettingsLayout extends ScrollPane {          // "component" = a ScrollPane
+    private final VBox container;
+    public SettingsLayout() {
+        container = new VBox(20);
+        this.setContent(container);
+        this.setFitToWidth(true);
+        this.getStyleClass().add("main-content");         // CSS class
+        buildUi();                                         // creates the child nodes
+    }
+}</code></pre>
+
+<h3>Navigation = swap the center node</h3>
+<pre><code>// MainLayout.java
+public void setMainContent(Node node) {
+    mainContent.getChildren().clear();
+    mainContent.getChildren().add(node);
+}
+newAppBtn.setOnAction(e -&gt; setMainContent(new NewApplicationLayout()));
+profileBtn.setOnAction(e -&gt; setMainContent(new ProfileDashboardLayout()));</code></pre>
+<p>That is the whole "router". Each click creates a <b>fresh</b> page object (so data is re-read from the DB). Child screens find the parent shell with <code>getScene().getRoot() instanceof MainLayout</code> (Java 16+ pattern matching), then call <code>setMainContent</code> or <code>refreshApplications()</code>.</p>
+
+<h3>The screens</h3>
+<table>
+<tr><th>Class</th><th>What it does</th></tr>
+<tr><td><code>SceneManager</code></td><td>Static helper: swap the entire Scene (onboarding &harr; main app).</td></tr>
+<tr><td><code>OnboardingLayout</code></td><td>First-run form. Saves a <code>Profile</code> via <code>ProfileDao</code> then calls <code>SceneManager.showMainApp()</code>.</td></tr>
+<tr><td><code>MainLayout</code></td><td>App shell: sidebar with saved applications (read from DB, click to reopen, trash to delete) plus the swappable content area.</td></tr>
+<tr><td><code>NewApplicationLayout</code></td><td>Job description text area + optional metadata. On submit: saves the application, kicks off the AI pipeline, switches to the results screen.</td></tr>
+<tr><td><code>GeneratedApplicationLayout</code></td><td>4 tabs: Resume, Cover Letter, Email, Job Fit. Each starts as a spinner and is replaced when its <code>CompletableFuture</code> completes.</td></tr>
+<tr><td><code>ProfileDashboardLayout</code></td><td>Career profile cards with add / edit / delete dialogs for experience, projects, education, skills, plus the profile + links editor.</td></tr>
+<tr><td><code>SettingsLayout</code></td><td>Export your data to a <code>.resumevault</code> file.</td></tr>
+</table>
+
+<h2>7. Styling with JavaFX CSS</h2>
+<p>JavaFX CSS looks like web CSS but with <code>-fx-</code> prefixed properties and a smaller selector set. The theme lives in <code>resources/css/style.css</code> and is attached once to the Scene/root.</p>
+<pre><code>.root {                                   /* like :root */
+    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -bg-color: #F7F7F5;                   /* "looked-up colors" = CSS variables */
+    -accent-primary: #4F46E5;
+    -panel-bg: #FFFFFF;
+}
+.sidebar { -fx-background-color: -panel-bg; }   /* usage = var(--panel-bg) */</code></pre>
+<ul>
+<li><b>Variables:</b> any <code>-name: value</code> declared in <code>.root</code> can be referenced as <code>-name</code> (no <code>var()</code>).</li>
+<li><b>Classes:</b> <code>node.getStyleClass().add("btn")</code> &harr; <code>class="btn"</code>. The code also uses inline styles: <code>node.setStyle("-fx-font-weight: bold;")</code>.</li>
+<li>Common properties: <code>-fx-background-color</code>, <code>-fx-background-radius</code>, <code>-fx-border-color</code>, <code>-fx-padding</code>, <code>-fx-text-fill</code> (text colour, <i>not</i> <code>color</code>), <code>-fx-font-size</code>.</li>
+<li><b>Icons:</b> <code>new FontIcon("fth-plus")</code> from Ikonli; the <code>fth-</code> prefix is the Feather pack. A wrong prefix (<code>ft-</code>) caused an early crash.</li>
+</ul>
+
+<h2 class="pb">8. Events, dialogs and forms</h2>
+<h3>Events</h3>
+<pre><code>Button addBtn = new Button("Add Skill");
+addBtn.setOnAction(e -&gt; openEntryDialog("Skills", null));</code></pre>
+<p>A lambda (<code>e -&gt; ...</code>) is the same idea as a TypeScript arrow function. Variables captured by a lambda must be <b>effectively final</b> (never reassigned) &mdash; which is why you see one-element arrays or helper variables in a few spots.</p>
+
+<h3>Forms</h3>
+<p>Inputs are <code>TextField</code> (one line) and <code>TextArea</code> (multi-line). There is no two-way binding by default; you read values when the user confirms: <code>nameField.getText()</code>.</p>
+
+<h3>Dialogs: modal and blocking</h3>
+<pre><code>Dialog&lt;ButtonType&gt; dialog = new Dialog&lt;&gt;();
+dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+dialog.getDialogPane().setContent(grid);                 // any Node
+Optional&lt;ButtonType&gt; result = dialog.showAndWait();     // BLOCKS until closed
+if (result.isPresent() &amp;&amp; result.get() == ButtonType.OK) {
+    // read fields, save, then loadData() to rebuild the page
+}</code></pre>
+<p><code>showAndWait()</code> is like <code>await prompt()</code>: the code after it runs when the user closes the dialog. <code>Optional</code> is Java's "maybe a value" (instead of <code>null</code>/<code>undefined</code>).</p>
+
+<p><b>Add vs. edit share one dialog.</b> <code>openEntryDialog(section, item)</code> receives <code>null</code> for "add" or the existing object for "edit". On save, <code>CareerDao.saveX()</code> inserts when <code>id == null</code> and updates otherwise &mdash; a manual "upsert".</p>
+
+<h3>The refresh pattern</h3>
+<pre><code>private void loadData() {
+    container.getChildren().clear();           // throw away the old nodes
+    container.getChildren().add(buildBasicInfoSection(profileDao.getProfile()));
+    container.getChildren().add(buildSection("Experience", "Add Experience"));
+    ...                                        // rebuilt from the DB every time
+}</code></pre>
+<p>Every mutation ends with <code>loadData()</code>. It is the manual equivalent of "state changed &rarr; re-render".</p>
+
+<h2>9. Threading: the one rule you must learn</h2>
+<div class="warn"><b>Rule:</b> only the <b>JavaFX Application Thread</b> may touch UI nodes, and it must <b>never block</b> (a long operation freezes the window). Anything slow &mdash; HTTP, big DB work, PDF rendering &mdash; goes on another thread, and the result is handed back with <code>Platform.runLater(...)</code>.</div>
+<p>Think of it as Node's single event loop, except that Java has real threads, so <i>you</i> must hop back to the UI thread explicitly. Tkinter has the identical rule (<code>root.after</code> / queue).</p>
+<pre><code>// GeneratedApplicationLayout.createLoadingTab
+future.thenAccept(content -&gt; Platform.runLater(() -&gt; {      // hop back to UI thread
+    tab.setContent(viewFactory.apply(content));              // safe to touch nodes now
+})).exceptionally(ex -&gt; {                                    // like .catch()
+    Platform.runLater(() -&gt; tab.setContent(errorLabel(...)));
+    return null;
+});</code></pre>
+<p><code>CompletableFuture&lt;T&gt;</code> &asymp; <code>Promise&lt;T&gt;</code>:</p>
+<table>
+<tr><th>Java</th><th>TypeScript</th></tr>
+<tr><td><code>future.thenApply(x -&gt; y)</code></td><td><code>.then(x =&gt; y)</code></td></tr>
+<tr><td><code>future.thenCompose(x -&gt; otherFuture)</code></td><td><code>.then(x =&gt; otherPromise)</code> (flattens)</td></tr>
+<tr><td><code>a.thenCombine(b, (x,y) -&gt; ...)</code></td><td><code>Promise.all([a,b]).then(([x,y]) =&gt; ...)</code></td></tr>
+<tr><td><code>future.thenAccept(x -&gt; ...)</code></td><td><code>.then(x =&gt; { ... })</code> (no return)</td></tr>
+<tr><td><code>future.exceptionally(ex -&gt; ...)</code></td><td><code>.catch(ex =&gt; ...)</code></td></tr>
+<tr><td><code>CompletableFuture.supplyAsync(() -&gt; ...)</code></td><td><code>new Promise(...)</code> run off-thread</td></tr>
+</table>
+<p>There is no <code>async/await</code> in Java; everything is chains of <code>thenX</code>.</p>
+
+<h2 class="pb">10. The data layer</h2>
+<h3>10.1 Models (<code>model/</code>)</h3>
+<p>Plain classes: private fields, public getters/setters. They are what <code>interface Experience { company: string; ... }</code> would be, but with boilerplate.</p>
+<pre><code>public class Skill {
+    private Integer id;           // Integer (boxed) so it can be null = "not saved yet"
+    private String name;
+    private String proficiency;   // optional: just null/empty
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    ...
+}</code></pre>
+<p>Models: <code>Profile</code>, <code>ProfileLink</code>, <code>Experience</code>, <code>Project</code>, <code>Education</code>, <code>Skill</code>, <code>JobApplication</code> (an application with its generated documents attached).</p>
+
+<h3>10.2 SQLite + JDBC</h3>
+<p>SQLite is a single-file database (<code>data/resumetor.db</code>). <b>JDBC</b> is Java's standard SQL API &mdash; low-level, like <code>pg</code> or <code>sqlite3</code>, with no ORM.</p>
+<pre><code>String sql = "UPDATE skill SET name = ?, proficiency = ? WHERE id = ?";
+try (Connection conn = DatabaseManager.getInstance().getConnection();
+     PreparedStatement ps = conn.prepareStatement(sql)) {
+    ps.setString(1, s.getName());              // 1-based parameter index!
+    ps.setString(2, s.getProficiency());
+    ps.setInt(3, s.getId());
+    ps.executeUpdate();                        // INSERT/UPDATE/DELETE
+} catch (SQLException ex) { ex.printStackTrace(); }
+
+// Reading:
+try (ResultSet rs = stmt.executeQuery("SELECT * FROM skill")) {
+    while (rs.next()) { s.setName(rs.getString("name")); ... }
+}</code></pre>
+<ul>
+<li><code>try (...) { }</code> is <b>try-with-resources</b>: auto-closes like Python's <code>with</code>.</li>
+<li><code>?</code> placeholders (<code>PreparedStatement</code>) prevent SQL injection. Never concatenate user input into SQL.</li>
+<li><code>SQLException</code> is a <b>checked exception</b>: the compiler forces you to catch or declare it.</li>
+</ul>
+
+<h3>10.3 Tables (<code>schema.sql</code>)</h3>
+<table>
+<tr><th>Table</th><th>Holds</th></tr>
+<tr><td><code>user_profile</code></td><td>name, email, phone, title, URLs, summary (single row in practice)</td></tr>
+<tr><td><code>profile_link</code></td><td>user-defined (label, url) pairs such as LinkedIn</td></tr>
+<tr><td><code>experience</code>, <code>project</code>, <code>education</code>, <code>skill</code></td><td>career entries (many extra columns reserved for future use)</td></tr>
+<tr><td><code>application</code></td><td>one row per job application + raw job text</td></tr>
+<tr><td><code>generated_document</code></td><td>(application_id, type, content). <code>type</code> is RESUME, COVER_LETTER, EMAIL, JOB_ANALYSIS or MATCHING</td></tr>
+<tr><td><code>application_analysis</code>, <code>certification</code>, <code>achievement</code>, <code>activity</code>, <code>settings</code></td><td>defined but not yet used by the UI</td></tr>
+</table>
+
+<h3>10.4 DAOs (<code>repository/</code>)</h3>
+<table>
+<tr><th>Class</th><th>Responsibility</th></tr>
+<tr><td><code>DatabaseManager</code></td><td><b>Singleton</b> (<code>getInstance()</code>). Creates DB/folder, runs schema, hands out the <code>Connection</code>.</td></tr>
+<tr><td><code>ProfileDao</code></td><td>get/save the profile; get/replace links.</td></tr>
+<tr><td><code>CareerDao</code></td><td>list / save (insert-or-update) / delete for experience, project, education, skill.</td></tr>
+<tr><td><code>ApplicationDao</code></td><td>insert application, upsert generated documents, list for sidebar, load with documents, delete.</td></tr>
+</table>
+<div class="tip"><b>Singleton</b> = a class with a private constructor and a static <code>getInstance()</code>, like a module-level instance in TS/Python.</div>
+
+<h2 class="pb">11. The AI layer</h2>
+<h3>11.1 <code>OpenRouterLLMService</code> (ai/)</h3>
+<p>Wraps one HTTP endpoint: <code>POST https://openrouter.ai/api/v1/chat/completions</code> using Java's built-in <code>java.net.http.HttpClient</code> (like <code>fetch</code>). It builds the JSON body with Jackson's <code>ObjectMapper</code> (like <code>JSON.stringify</code>) and returns a <code>CompletableFuture&lt;String&gt;</code> with the model's text, parsed from <code>choices[0].message.content</code>. A <code>jsonMode</code> flag adds <code>response_format: json_object</code> so the model must return valid JSON.</p>
+<p>The API key and model come from <code>Config.get("OPENROUTER_API_KEY")</code> / <code>Config.get("AI_MODEL", default)</code>, which checks <code>.env</code> first and then real environment variables.</p>
+
+<h3>11.2 <code>AiService</code> (service/)</h3>
+<p>Each method builds a system prompt + user prompt and calls the LLM:</p>
+<table>
+<tr><th>Method</th><th>Output format</th><th>Purpose</th></tr>
+<tr><td><code>analyzeJob(rawText)</code></td><td>JSON</td><td>Extract title, company, required skills, keywords...</td></tr>
+<tr><td><code>matchProfileToJob(analysis)</code></td><td>JSON of paragraphs</td><td>Fit report: strong/partial/missing, keywords, advice</td></tr>
+<tr><td><code>generateResume(analysis, match)</code></td><td>JSON</td><td>Summary, skills, experience bullets, project bullets</td></tr>
+<tr><td><code>generateCoverLetter(...)</code></td><td>plain text</td><td>The letter body</td></tr>
+<tr><td><code>generateEmail(analysis)</code></td><td>plain text</td><td>Short P.A.S. (Problem-Agitate-Solve) email</td></tr>
+</table>
+<p>Prompts are string constants. Asking for strict JSON with a documented schema lets the app turn model output into proper layouts rather than showing raw text.</p>
+
+<h3>11.3 <code>PiiSanitizer</code> (security/) &mdash; privacy by design</h3>
+<p>The profile sent to the model contains <b>placeholders</b> (<code>[NAME]</code>, <code>[EMAIL]</code>, <code>[PHONE]</code>, ...) instead of real contact data. When the output comes back, <code>injectRealPii()</code> swaps the real values in locally. Experience, projects and skills are sent because the model needs them to tailor the text; your identity and contact details never leave the machine.</p>
+
+<h3>11.4 <code>JsonText</code> (util/)</h3>
+<p>LLMs sometimes wrap JSON in markdown fences or add chatter. <code>JsonText.parse()</code> strips fences, slices from the first <code>{</code> to the last <code>}</code> and parses with Jackson, returning <code>null</code> on failure. <code>humanize("missingRequirements")</code> returns <code>"Missing Requirements"</code> for headings.</p>
+
+<h2 class="pb">12. Documents: formatting, export and preview</h2>
+<p>One intermediate format feeds everything &mdash; a tiny markup (<b>"markup"</b> in the code):</p>
+<pre><code># John Doe                         ← name (centred)
+Software Engineer                  ← header lines (centred)
+john@x.com | LinkedIn: https://... 
+
+## Experience                      ← section heading (uppercase, underlined)
+### Backend Engineer | Acme        ← entry heading (bold)
+- Built X that improved Y          ← bullet</code></pre>
+<table>
+<tr><th>Class</th><th>Role</th></tr>
+<tr><td><code>DocumentFormatter</code></td><td>LLM JSON &rarr; markup. Adds the header from the saved <code>Profile</code> + links and the Education section straight from the database (facts are not left to the AI). Falls back gracefully if the model returned non-JSON.</td></tr>
+<tr><td><code>PdfExporter</code></td><td>markup &rarr; PDF using Apache PDFBox: word-wrap, page breaks, centred header, section rules, standard fonts only (ATS-safe). <code>build()</code> returns the in-memory document; <code>export()</code> saves it.</td></tr>
+<tr><td><code>DocxExporter</code></td><td>markup &rarr; Word file using Apache POI with equivalent styling.</td></tr>
+<tr><td><code>VaultManager</code></td><td>Writes the career profile to JSON (<code>.resumevault</code>). Import is still a stub.</td></tr>
+</table>
+
+<h3>In-app PDF preview</h3>
+<p>JavaFX has no PDF widget. The trick used here: build the PDF in memory with <code>PdfExporter.build()</code>, render every page to a <code>BufferedImage</code> with PDFBox's <code>PDFRenderer</code>, convert to a JavaFX <code>WritableImage</code>, and show it in an <code>ImageView</code>. Because the preview <i>is</i> the exported PDF, what you see is exactly what you save. Rendering runs on a background thread (<code>supplyAsync</code>) and the images are added to the UI via <code>Platform.runLater</code>. The "Edit Text" toggle swaps in a <code>TextArea</code> with the markup; switching back re-renders.</p>
+
+<h2 class="pb">13. End-to-end walkthrough: "Analyze &amp; Generate"</h2>
+<pre><code>User clicks the button in NewApplicationLayout
+ │
+ ├─ 1. ApplicationDao.insertApplication(...)        → row in `application`
+ ├─ 2. MainLayout.refreshApplications()             → appears in sidebar immediately
+ │
+ ├─ 3. Build the future pipeline (nothing blocks):
+ │      jobAnalysis   = aiService.analyzeJob(text)                      ┐ HTTP #1
+ │      matching      = jobAnalysis.thenCompose(matchProfileToJob)      │ HTTP #2
+ │      resume        = jobAnalysis + matching → generateResume         │ HTTP #3
+ │      coverLetter   = jobAnalysis + matching → generateCoverLetter    │ HTTP #4 (parallel w/ #3, #5)
+ │      email         = jobAnalysis.thenCompose(generateEmail)          ┘ HTTP #5
+ │
+ ├─ 4. Persist each result as it arrives:
+ │      future.thenAccept(c -&gt; appDao.saveDocument(appId, TYPE, c))
+ │      jobAnalysis also renames the sidebar entry (title/company)
+ │
+ └─ 5. new GeneratedApplicationLayout(...) is shown right away:
+        each Tab shows a spinner → future completes →
+        Platform.runLater → tab content replaced with
+          • Resume / Cover Letter : PDF page images + toolbar
+          • Email                 : TextArea + Copy
+          • Job Fit &amp; Feedback    : heading + paragraph cards
+</code></pre>
+<p>Later, clicking an application in the sidebar calls <code>ApplicationDao.getWithDocuments(id)</code> and passes <code>CompletableFuture.completedFuture(savedText)</code> into the same <code>GeneratedApplicationLayout</code> &mdash; the same screen works for live and saved data because it only cares about futures.</p>
+
+<h3>Data flow summary</h3>
+<pre><code>UI (controller/*)  ──calls──▶  Service (AiService) ──▶ LLM (OpenRouterLLMService) ──▶ internet
+     │   ▲                         │    ▲
+     │   └─ Platform.runLater ◀────┘    └─ PiiSanitizer (strip/restore personal data)
+     │
+     ├──calls──▶ DAOs (repository/*) ──JDBC──▶ SQLite (data/resumetor.db)
+     │
+     └──calls──▶ DocumentFormatter ▶ PdfExporter / DocxExporter ▶ file / preview image</code></pre>
+
+<h2 class="pb">14. File-by-file reference</h2>
+<table>
+<tr><th>File</th><th>Purpose</th></tr>
+<tr><td><code>App.java</code></td><td>Entry point. Init DB, choose onboarding vs main.</td></tr>
+<tr><td><code>SystemInfo.java</code></td><td>Boilerplate helper (Java/JavaFX version strings).</td></tr>
+<tr><td><code>module-info.java</code></td><td>Module requirements/exports.</td></tr>
+<tr><td><code>controller/SceneManager.java</code></td><td>Swap whole scenes; attach CSS.</td></tr>
+<tr><td><code>controller/OnboardingLayout.java</code></td><td>First-run profile form.</td></tr>
+<tr><td><code>controller/MainLayout.java</code></td><td>Shell: sidebar + content area; application list; navigation.</td></tr>
+<tr><td><code>controller/NewApplicationLayout.java</code></td><td>Job input; triggers persistence and AI pipeline.</td></tr>
+<tr><td><code>controller/GeneratedApplicationLayout.java</code></td><td>Results tabs; PDF preview; export buttons; feedback cards.</td></tr>
+<tr><td><code>controller/ProfileDashboardLayout.java</code></td><td>Profile + career CRUD UI with dialogs.</td></tr>
+<tr><td><code>controller/SettingsLayout.java</code></td><td>Data export.</td></tr>
+<tr><td><code>model/*.java</code></td><td>Data classes.</td></tr>
+<tr><td><code>repository/DatabaseManager.java</code></td><td>Connection + schema bootstrap (singleton).</td></tr>
+<tr><td><code>repository/ProfileDao.java</code></td><td>Profile and link persistence.</td></tr>
+<tr><td><code>repository/CareerDao.java</code></td><td>Experience/project/education/skill CRUD.</td></tr>
+<tr><td><code>repository/ApplicationDao.java</code></td><td>Applications and generated documents.</td></tr>
+<tr><td><code>service/AiService.java</code></td><td>Prompt building and AI orchestration.</td></tr>
+<tr><td><code>ai/OpenRouterLLMService.java</code></td><td>HTTP call to OpenRouter.</td></tr>
+<tr><td><code>security/PiiSanitizer.java</code></td><td>Build sanitized profile context; re-inject real data.</td></tr>
+<tr><td><code>export/DocumentFormatter.java</code></td><td>LLM output &rarr; document markup.</td></tr>
+<tr><td><code>export/PdfExporter.java</code>, <code>DocxExporter.java</code>, <code>DocumentExporter.java</code></td><td>Writers (interface + two implementations).</td></tr>
+<tr><td><code>importexport/VaultManager.java</code></td><td>Profile export to JSON (import TODO).</td></tr>
+<tr><td><code>config/Config.java</code></td><td>Env/.env settings access.</td></tr>
+<tr><td><code>util/JsonText.java</code></td><td>Tolerant JSON parse + helpers.</td></tr>
+<tr><td><code>resources/css/style.css</code></td><td>Theme.</td></tr>
+<tr><td><code>resources/db/schema.sql</code></td><td>Database schema.</td></tr>
+</table>
+
+<h2 class="pb">15. Java gotchas for TypeScript developers</h2>
+<table>
+<tr><th>Topic</th><th>TypeScript</th><th>Java</th></tr>
+<tr><td>Types</td><td>structural, erased</td><td>nominal, checked at compile time; generics erased at runtime</td></tr>
+<tr><td>Strings</td><td><code>===</code></td><td><b>use <code>.equals()</code></b>; <code>==</code> compares references</td></tr>
+<tr><td>Null</td><td><code>null</code>/<code>undefined</code>, <code>?.</code></td><td>only <code>null</code>; no <code>?.</code>. Check manually or use <code>Optional</code></td></tr>
+<tr><td>Primitives</td><td><code>number</code></td><td><code>int</code> vs boxed <code>Integer</code> (nullable); <code>boolean</code> vs <code>Boolean</code></td></tr>
+<tr><td>Imports</td><td>file paths</td><td>package names; one public class per file, filename = class name</td></tr>
+<tr><td>Properties</td><td><code>obj.name</code></td><td>private field + <code>getName()</code>/<code>setName()</code></td></tr>
+<tr><td>Errors</td><td>all unchecked</td><td><b>checked exceptions</b> must be caught or declared with <code>throws</code></td></tr>
+<tr><td>Inference</td><td><code>const x = ...</code></td><td><code>var x = ...</code> (local variables only)</td></tr>
+<tr><td>Switch</td><td>statement</td><td>modern <code>switch (x) { case "A" -&gt; ...; default -&gt; ... }</code> expression form is used here</td></tr>
+<tr><td>Type check</td><td><code>x instanceof Foo</code> + narrow</td><td><code>if (x instanceof Foo f)</code> binds <code>f</code> (pattern matching)</td></tr>
+<tr><td>Collections</td><td><code>[]</code>, <code>{}</code></td><td><code>List&lt;T&gt;</code>/<code>ArrayList</code>, <code>Map&lt;K,V&gt;/HashMap</code>; <code>List.of(...)</code> is immutable</td></tr>
+<tr><td>Lambdas</td><td><code>x =&gt; ...</code></td><td><code>x -&gt; ...</code>; captured locals must be effectively final</td></tr>
+<tr><td>Method refs</td><td>&ndash;</td><td><code>aiService::matchProfileToJob</code> = <code>x =&gt; aiService.matchProfileToJob(x)</code></td></tr>
+<tr><td>Interfaces</td><td>types only</td><td>contract + implementations (<code>DocumentExporter</code> &rarr; <code>PdfExporter</code>)</td></tr>
+<tr><td><code>static</code></td><td>module functions</td><td>belongs to the class, not instances (<code>Config.get</code>, <code>SceneManager</code>)</td></tr>
+</table>
+
+<h2>16. Known rough edges and exercises</h2>
+<h3>Things worth knowing about this codebase</h3>
+<ul>
+<li><b>Shared connection.</b> DAOs use try-with-resources on a <i>shared</i> <code>Connection</code>, which closes it; <code>DatabaseManager.getConnection()</code> silently reopens it. It works for a single-user desktop app but is not how you would do it in production (use a pool or open per call deliberately).</li>
+<li><b>Concurrency.</b> Several background threads save documents at the same time on the shared connection; SQLite serialises writes, but a proper design would use one writer thread or a pool.</li>
+<li><b>Vault import</b> is a TODO and the unused tables are placeholders.</li>
+<li><b>No automated tests</b> and no DB migrations.</li>
+<li>Failed AI calls currently show the error in the tab; there is no retry button.</li>
+</ul>
+
+<h3>Exercises (in increasing difficulty)</h3>
+<ol>
+<li>Change the accent colour in <code>style.css</code> (<code>-accent-primary</code>) and run the app.</li>
+<li>Add a "Location" field to <code>Profile</code>: update <code>schema.sql</code> (delete the DB), the model, <code>ProfileDao</code>, and the edit dialog.</li>
+<li>Add a "Regenerate" button to the results screen that reruns just the email future.</li>
+<li>Implement <code>VaultManager.importVault</code> using Jackson's <code>TypeReference</code> and the DAO save methods.</li>
+<li>Add a dark-mode toggle in <code>SettingsLayout</code> that swaps the stylesheet on the Scene.</li>
+<li>Move the DB connection to a per-call open/close and add a tiny single-thread executor for writes.</li>
+</ol>
+
+<h3>Mental checklist when adding a feature</h3>
+<ol>
+<li><b>Model</b> &rarr; add/extend a class in <code>model/</code> and a table/column in <code>schema.sql</code>.</li>
+<li><b>DAO</b> &rarr; SQL in <code>repository/</code> (parameterised).</li>
+<li><b>Service</b> (if AI or business logic is involved) &rarr; <code>service/</code>.</li>
+<li><b>UI</b> &rarr; build nodes in a <code>controller/</code> class; wire <code>setOnAction</code>.</li>
+<li>Slow work? &rarr; <code>CompletableFuture</code> + <code>Platform.runLater</code>.</li>
+<li>New library? &rarr; <code>pom.xml</code> dependency <i>and</i> <code>requires</code> in <code>module-info.java</code>.</li>
+<li>Run <code>mvn clean javafx:run</code>.</li>
+</ol>
+
+</body>
+</html>

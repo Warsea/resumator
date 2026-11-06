@@ -1,0 +1,68 @@
+# Maven build output
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Packaged distributions & installers
+dist/
+*.deb
+*.rpm
+*.exe
+*.msi
+*.dmg
+*.pkg
+*.app/
+
+# Local SQLite database & user vault exports
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.resumevault
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Java / JVM crash logs & class files
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# IDEs & Editors
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+nbbuild/
+nbproject/
+nbdist/
+.nb-gradle/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*~
