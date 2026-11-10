@@ -87,7 +87,7 @@ public class GeneratedApplicationLayout extends BorderPane {
 
         VBox loadingBox = new VBox(15);
         loadingBox.setAlignment(Pos.CENTER);
-        loadingBox.getChildren().addAll(new ProgressIndicator(), new Label("Generating " + title + "..."));
+        loadingBox.getChildren().addAll(new ProgressIndicator(), new Label("Generating " + title + "... Do not leave this page."));
         tab.setContent(loadingBox);
 
         future.thenAccept(content -> Platform.runLater(() -> {

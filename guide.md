@@ -18,6 +18,7 @@ sudo apt install -y git openjdk-21-jdk maven fakeroot binutils xdg-utils
 ```
 
 Verify installation:
+
 ```bash
 java -version
 mvn -v
@@ -38,11 +39,21 @@ winget install --id EclipseAdoptium.Temurin.21.JDK -e
 
 # 3. Install Apache Maven
 winget install --id Apache.Maven -e
+
+# If winget isn't working install scoop, then install maven with scoop
+
+# Allow script execution
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# install scoop
+iwr -useb get.scoop.sh | iex
+
 ```
 
 > **Important:** Close and reopen PowerShell after installing so your `PATH` environment variable refreshes.
 
 Verify installation:
+
 ```powershell
 java -version
 mvn -v
@@ -61,6 +72,7 @@ brew install --cask temurin@21
 ```
 
 Verify installation:
+
 ```bash
 java -version
 mvn -v
@@ -82,16 +94,18 @@ cd resumetor
 Either create a `.env` file in the project root:
 
 **Linux / macOS:**
+
 ```bash
 echo "OPENROUTER_API_KEY=your_openrouter_api_key_here" > .env
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 Set-Content -Path .env -Value "OPENROUTER_API_KEY=your_openrouter_api_key_here"
 ```
 
-*(Or hardcode the fallback key on line 33 of `src/main/java/app/resumetor/ai/OpenRouterLLMService.java` before building standalone installers).*
+_(Or hardcode the fallback key on line 33 of `src/main/java/app/resumetor/ai/OpenRouterLLMService.java` before building standalone installers)._
 
 ### Step 3: Run the application
 
@@ -108,15 +122,17 @@ mvn clean javafx:run
 JDK 21 includes `jpackage`, which bundles your application along with a stripped-down Java Runtime (`jlink`). **End users do not need Java installed to run the packaged app.**
 
 > **Note:** `jpackage` builds packages for the OS it is currently running on:
-> * Run on **Linux** to produce `.deb` / `.rpm` / Linux portable folders.
-> * Run on **Windows** to produce `.exe` / `.msi` / Windows portable folders.
-> * Run on **macOS** to produce `.dmg` / `.pkg` / `.app` bundles.
+>
+> - Run on **Linux** to produce `.deb` / `.rpm` / Linux portable folders.
+> - Run on **Windows** to produce `.exe` / `.msi` / Windows portable folders.
+> - Run on **macOS** to produce `.dmg` / `.pkg` / `.app` bundles.
 
 ---
 
 ### A. Packaging on Linux (`.deb` Installer or Portable App)
 
 #### 1. Compile and stage dependencies
+
 ```bash
 mvn clean package -DskipTests
 mvn dependency:copy-dependencies -DoutputDirectory=target/libs
@@ -124,6 +140,7 @@ cp target/resumetor-1.0-SNAPSHOT.jar target/libs/
 ```
 
 #### 2. Build a `.deb` installer (Ubuntu / Debian)
+
 ```bash
 rm -f dist/linux/*.deb
 
@@ -140,17 +157,18 @@ jpackage \
   --dest dist/linux
 ```
 
-* **Output:** `dist/linux/resumetor_1.0.0_amd64.deb`
-* **Install:** `sudo dpkg -i dist/linux/resumetor_1.0.0_amd64.deb`
-* **Uninstall:** `sudo apt purge -y resumetor`
+- **Output:** `dist/linux/resumetor_1.0.0_amd64.deb`
+- **Install:** `sudo dpkg -i dist/linux/resumetor_1.0.0_amd64.deb`
+- **Uninstall:** `sudo apt purge -y resumetor`
 
-*(Tip: If you want a portable Linux folder instead of a `.deb`, change `--type deb` to `--type app-image` and remove the `--linux-*` flags).*
+_(Tip: If you want a portable Linux folder instead of a `.deb`, change `--type deb` to `--type app-image` and remove the `--linux-_` flags).\*
 
 ---
 
 ### B. Packaging on Windows (Portable `.exe` or Setup Installer)
 
 #### 1. Compile and stage dependencies (PowerShell)
+
 ```powershell
 mvn clean package -DskipTests
 mvn dependency:copy-dependencies -DoutputDirectory=target/libs
@@ -158,6 +176,7 @@ Copy-Item target/resumetor-1.0-SNAPSHOT.jar target/libs/
 ```
 
 #### 2. Option 1: Portable Windows App Folder (No extra tools needed)
+
 ```powershell
 jpackage `
   --type app-image `
@@ -169,15 +188,16 @@ jpackage `
   --dest dist/windows
 ```
 
-* **Output:** `dist\windows\Resumetor\Resumetor.exe`
-* You can zip the `dist\windows\Resumetor` folder and share it with any Windows user.
+- **Output:** `dist\windows\Resumetor\Resumetor.exe`
+- You can zip the `dist\windows\Resumetor` folder and share it with any Windows user.
 
 #### 3. Option 2: Windows `.exe` / `.msi` Setup Wizard (Start Menu & Desktop Shortcut)
+
 Building an installer wizard on Windows requires **WiX Toolset v3**:
 
 ```powershell
-# Install WiX Toolset (close & reopen PowerShell after installing)
-winget install --id FireGiant.WiXToolset -e
+# Install WiX Toolset, as administrator (close & reopen PowerShell after installing)
+winget install --id WiXToolset.WiXToolset -e
 
 # Build the .exe installer
 jpackage `
@@ -193,13 +213,14 @@ jpackage `
   --dest dist/windows
 ```
 
-* **Output:** `dist\windows\Resumetor-1.0.0.exe`
+- **Output:** `dist\windows\Resumetor-1.0.0.exe`
 
 ---
 
 ### C. Packaging on macOS (`.dmg` Disk Image or `.app` Bundle)
 
 #### 1. Compile and stage dependencies
+
 ```bash
 mvn clean package -DskipTests
 mvn dependency:copy-dependencies -DoutputDirectory=target/libs
@@ -207,7 +228,9 @@ cp target/resumetor-1.0-SNAPSHOT.jar target/libs/
 ```
 
 #### 2. (Optional) Convert `icon.png` to macOS `.icns`
+
 macOS uses `.icns` for app icons (or you can omit `--icon` to use the default icon):
+
 ```bash
 mkdir -p icon.iconset
 sips -z 512 512 src/main/resources/images/icon.png --out icon.iconset/icon_512x512.png
@@ -216,6 +239,7 @@ rm -rf icon.iconset
 ```
 
 #### 3. Build a `.dmg` installer
+
 ```bash
 jpackage \
   --type dmg \
@@ -228,13 +252,13 @@ jpackage \
   --dest dist/mac
 ```
 
-* **Output:** `dist/mac/Resumetor-1.0.0.dmg` (or use `--type app-image` to generate `dist/mac/Resumetor.app` directly).
+- **Output:** `dist/mac/Resumetor-1.0.0.dmg` (or use `--type app-image` to generate `dist/mac/Resumetor.app` directly).
 
 ---
 
 ## 4. Where Data is Stored
 
-* **Development mode (`mvn javafx:run`):** Uses `./data/resumetor.db` in the project directory if `./data` exists and is writable.
-* **Installed app (`.deb`, `.exe`, `.dmg`):** Automatically stores the SQLite database in your user home folder at:
-  * **Linux / macOS:** `~/.resumetor/resumetor.db`
-  * **Windows:** `C:\Users\<YourUsername>\.resumetor\resumetor.db`
+- **Development mode (`mvn javafx:run`):** Uses `./data/resumetor.db` in the project directory if `./data` exists and is writable.
+- **Installed app (`.deb`, `.exe`, `.dmg`):** Automatically stores the SQLite database in your user home folder at:
+  - **Linux / macOS:** `~/.resumetor/resumetor.db`
+  - **Windows:** `C:\Users\<YourUsername>\.resumetor\resumetor.db`
